@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간편 영화 후기</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-B/GM4XqrwHnWXNOWMbloTmrYXZg10cakYGmpfsR/bbzQ6JAJI4ihuyADKLnBgrCe" crossorigin="anonymous">
+    <link rel="stylesheet" href="./main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbit&display=swap" rel="stylesheet">
+</head>
+<body>
+     <script type="module" src="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-1a/pXj49ZQ1aHEmrJ+gMw1otqoVsYwlEnlD8mIfY2TV03r20Y0CN7uqx1tQogjPL" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <nav class="navbar fg-2" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+        <img src="https://images.unsplash.com/vector-1749120085205-99aadceddc93?q=80&w=1160&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+        Bootstrap
+        </a>
+    </div>
+    </nav>
+    <div class="container">
+    <div class="px-4 py-5 my-5 text-center" id="jumbotron">
+        <h1 class="fs-4xl fw-bold fg-emphasis-inverse">인기/최신 영화에 한마디씩!</h1>
+        <div class="lg:col-6 mx-auto">
+            <p class="fs-lg fw-light mb-4">어쩌고 저쩌고</p>
+            <div class="d-grid gap-2 sm:d-flex sm:justify-content-center"><button type="button" class="btn-subtle theme-danger btn-lg px-4" id="top-button">Primary button</button>
+            </div>
+        </div>
+    </div>
+    <div class="row row-cols-1 md:row-cols-3 g-4" id="movie_list">
+        <div class="col">
+            <div class="card h-100">
+                <img src="..." class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h4 class="card-title">${movie_list[i].original_title}</h4>
+                    <button type="button" class="btn" id="review_button" onclick="review()">리뷰 보기</button>
+                </div>
+            </div>
+        </div> 
+    </div>
+    <dialog class="dialog" id="invokerDialog">
+        <div class="dialog-header">
+            <h1 class="dialog-title">Invoker Commands</h1>
+            <button type="button" class="btn-close" commandfor="invokerDialog" command="close" aria-label="Close"></button>
+        </div>
+        <div class="dialog-body">
+            <p>This dialog opens with <code>command="show-modal"</code> and closes with <code>command="close"</code>. No Bootstrap JavaScript is involved.</p>
+        </div>
+        <div class="dialog-footer">
+            <input type="text" class="form-control" id="review" style="width:70" placeholder="리뷰를 입력하세요">
+            <button type="button" class="btn-solid theme-secondary" commandfor="invokerDialog" onclick="addreview()">후기 쓰기</button>
+        </div>
+    </dialog>
+    </div>
+    <script>
+        let target_id = 0; // 리뷰를 쓰기 위해 선택한 영화의 id를 저장할 변수. 전역변수로 모든 함수에서 접근 가능하도록 선언
+        $(document).ready(function() {
+            console.log("시작!")
+
+            $.ajax({
+                url: "https://api.themoviedb.org/3/movie/popular?api_key=274d63368474c5b565115131bcc00543&language=ko-KR&page=1",
+                data: {"key": "value"},
+                type:"GET",
+                success: function(json){
+                    console.log(json)
+                    $("#movie_list").html(''); // 기존 영화 목록 초기화해서 맨 앞 빈 카드 없애주기
+                    let movie_list = json.results;
+
+                    for(let i=0; i<movie_list.length;i++){ // 영화 목록 반복해서 가져오기
+                        // 이미지 링크로 가져오는 방법: https://developer.themoviedb.org/docs/image-basics
+                        let card = '<div class="col">\
+                            <div class="card h-100">\
+                                <img src="https://image.tmdb.org/t/p/w500' + movie_list[i].poster_path + '" class="card-img-top" alt="...">\
+                                <div class="card-body">\
+                                    <h4 class="card-title">' + movie_list[i].original_title + '</h4>\
+                                    <button type="button" class="btn" id="review_button" onclick="review(' + movie_list[i].id + ')">리뷰 보기</button>\
+                                </div>\
+                            </div>\
+                        </div>';
+                        $('#movie_list').append(card);
+                    }
+                },
+                error: function(err){
+                    console.log(err)
+                }
+            });
+        });
+        function review(id) {
+            target_id = id;
+            $.ajax({
+                url: `http://universeapi.net/review/list?movie_id=${id}`,
+                data: {},
+                type: "GET",
+                success: function(json) {
+                    console.log(json.data)
+                    let reviews = json.data
+                    for(let i=0; i<reviews.length; i++){
+                        $(".dialog-body").append('<p>' + reviews[i].review + '</p>')
+                    }
+                }
+            });
+            document.getElementById('invokerDialog').showModal();
+        }
+
+        function addreview() {
+            let review = $("#review").val(); // 리뷰 입력값 가져오기. addreview() 함수에서만 사용 가능. 함수 내부에서 선언된 변수는 해당 함수에서만 사용
+            let review_html = '<p>' + review + '</p>';
+
+            $.ajax({
+                url: `http://universeapi.net/review/add`,
+                data: {
+                    movie_id: target_id,
+                    review: review
+                },
+                type: "POST",
+                success: function(json) {
+                    console.log(json)
+                }
+            });
+
+            $(".dialog-body").append(review_html);
+            $("#review").val(''); // 리뷰 입력창 비우기
+        }
+    </script>
+    </body>
+</html>
