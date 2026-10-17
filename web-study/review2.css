@@ -1,0 +1,12 @@
+#layout_id02 {
+    background-color: cyan;
+    width: 100px;
+    height: 100px;
+    margin: 50px;
+    padding: 50px;
+}
+.layout02 > p {
+    font-size: 20px;
+    font-weight: 700;
+    color: white
+}
